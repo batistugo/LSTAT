@@ -370,7 +370,7 @@ plot_lines(pop,xcol='index')
 
 
     
-![png](images/18_0.png)
+![png](images/output_18_0.png)
     
 
 
@@ -393,7 +393,7 @@ plot_lines(teste.iloc[:,1:],xcol = 'ano',title= 'cid 91-95 - Menor que 1 Ano')
 
 
     
-![png](images/19_0.png)
+![png](images/output_19_0.png)
     
 
 
@@ -416,7 +416,7 @@ plot_lines(teste.iloc[:,1:],xcol = 'ano',title= 'cid 91-95 - 1 a 4 anos')
 
 
     
-![png](images/20_0.png)
+![png](images/output_20_0.png)
     
 
 
@@ -439,7 +439,7 @@ plot_lines(teste.iloc[:,1:],xcol = 'ano',title= 'cid 91-95 - Entre 5 a 9 anos')
 
 
     
-![png](images/21_0.png)
+![png](images/output_21_0.png)
     
 
 
@@ -462,7 +462,7 @@ plot_lines(teste.iloc[:,1:],xcol = 'ano',title= 'cid 91-95 - Entre 10 a 14 anos'
 
 
     
-![png](images/22_0.png)
+![png](images/output_22_0.png)
     
 
 
@@ -475,7 +475,7 @@ _ = plt.title('Evolução de Óbitos - Categoria CID 91-95 ', loc='left', fontsi
 
 
     
-![png](images/23_0.png)
+![png](images/output_23_0.png)
     
 
 
@@ -587,7 +587,7 @@ _ = plt.title('População Espirito Santo',pad=20)
 
 
     
-![png](images/29_0.png)
+![png](images/output_29_0.png)
     
 
 
@@ -600,7 +600,7 @@ _ = plt.title('Óbitos entre 1 e 4 anos',pad=20)
 
 
     
-![png](images/30_0.png)
+![png](images/output_30_0.png)
     
 
 
@@ -613,7 +613,7 @@ _ = plt.title('Óbitos menores que 1 ano',pad=20)
 
 
     
-![png](images/31_0.png)
+![png](images/output_31_0.png)
     
 
 
@@ -626,7 +626,7 @@ _ = plt.title('Óbitos entre 5 e 9 anos',pad=20)
 
 
     
-![png](images/32_0.png)
+![png](images/output_32_0.png)
     
 
 
@@ -639,7 +639,7 @@ _ = plt.title('Óbitos entre 10 e 14 anos',pad=20)
 
 
     
-![png](images/33_0.png)
+![png](images/output_33_0.png)
     
 
 
@@ -652,6 +652,6 @@ _ = plt.title('Total de Óbitos dividido em macrorregiões',pad=20)
 
 
     
-![png](images/34_0.png)
+![png](images/output_34_0.png)
     
 
