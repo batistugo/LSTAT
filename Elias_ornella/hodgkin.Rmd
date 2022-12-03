@@ -8,7 +8,7 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, fig.align = 'center', out.width = "80%",
-                      warning = FALSE, message = FALSE, error = FALSE)
+                      warning = FALSE, message = FALSE, error = FALSE, results = "hide")
 ```
 
 ```{r}
@@ -18,9 +18,6 @@ library(dplyr)
 library(ggplot2)
 library(geobr)
 library(scales)
-library(summarytools)
-library(data.table)
-library(readODS)
 ```
 
 ### Introdução
@@ -116,59 +113,35 @@ dados2 %>%
 
 <br>
 
-```{r fig.cap = "Figura 2: Taxa de mortalidade por Linfoma de Hodgkin em crianças e adolescentes no Brasil, por ano e região.",results = "hide"}
+```{r fig.cap = "Figura 2: Taxa de mortalidade por Linfoma de Hodgkin em crianças e adolescentes no Brasil, por ano e região."}
+t <- d %>% 
+  group_by(ano,regiao,base) %>% 
+  summarise(n_total = sum(n)) 
 
-# dados2 %>% filter(base=="hodgkin",regiao!= "NA") %>% 
-#   ggplot(aes(ano, regiao, fill=taxa)) +
-#   geom_tile() + 
-#   theme_bw() + 
-#   scale_fill_viridis_c(option="inferno", direction = -1) +
-#   labs(title = "Linfoma de Hodgkin, por ano e região",
-#        subtitle = "Taxa de mortalidade a cada 100.000 habitantes",
-#        x = "", y = "região",
-#        fill = "taxa") +
-#   theme(axis.text.x = element_text(angle = 45)) 
+t1 <- t %>% filter(base=="hodgkin" | base=="neoplasias")
 
-region <- read_region(year = 2020)
+t2 <- t %>% filter(base=="populacao") %>% rename(n_pop = n_total) %>% select(-base)
 
-t5 <- d %>% 
-  mutate(name_region = case_when(
-    regiao == "norte" ~ "Norte",
-    regiao == "nordeste" ~ "Nordeste",
-    regiao == "sudeste" ~ "Sudeste",
-    regiao == "sul" ~ "Sul",
-    regiao == "centro-oeste" ~ "Centro Oeste",
-    TRUE ~ NA_character_
-  )) %>% 
-  group_by(ano,regiao,name_region,base) %>% 
-  summarise(n_total = sum(n)) %>% 
-  as.data.frame()
+dados2 <- full_join(t1,t2,by=c("ano","regiao")) %>% mutate(taxa=n_total/n_pop*100000)
 
-t1 <- t5 %>% filter(base=="hodgkin" & name_region != "NA")
-
-t2 <- t5 %>% filter(base=="populacao" & name_region != "NA") %>% rename(n_pop = n_total) %>% select(-base)
-
-dados2 <- full_join(t1,t2,by=c("ano","regiao","name_region")) %>% mutate(taxa=n_total/n_pop*100000)
-
-dados_mapa <- left_join(region, dados2, by= "name_region")
-
-dados_mapa %>%
-  ggplot() +
-  geom_sf(aes(fill=taxa), color= "grey30", size=.15) +
-  theme_void()  + 
+dados2 %>% filter(base=="hodgkin",regiao!= "NA") %>% 
+  ggplot(aes(ano, regiao, fill=taxa)) +
+  geom_tile() + 
+  theme_bw() + 
+  scale_fill_viridis_c(option="inferno", direction = -1) +
   labs(title = "Linfoma de Hodgkin, por ano e região",
        subtitle = "Taxa de mortalidade a cada 100.000 habitantes",
+       x = "", y = "região",
        fill = "taxa") +
-  scale_fill_viridis_c(option="rocket",direction=-1) + 
-  facet_wrap(~ano)
+  theme(axis.text.x = element_text(angle = 45)) 
 ```
 
 <br> 
 
 Dois aspectos muito importantes ao estudar a incidência e mortalidade por linfoma de Hodgkin em crianças e adolescentes são faixa etária, posto que jovens adultos são mais propensos à doença, e região de residência, uma vez que parâmetros socieconômicos são consideradas associações causais para o desenvolvimento de um câncer. Ao observar os mapas geográficos na Figura 3, constatamos que o linfoma foi mais letal nos indivíduos que atenderam à faixa de idade de 15 a 19 anos, conclusão na direção com o que o INCA diz a respeito dos grupos mais afetados pelo linfoma de Hodgkin. Por outro lado, um fato curioso que podemos notar nessa mesma figura são as regiões em que mais óbitos ocorreram: Norte e Sul. Sabendo que os estados do Sul configuram entre os estados com os maiores IDHs do país, é de estranhar que eles tenham uma das maiores taxas de mortalidade nessa ocasião. O que nos leva a pensar que expectativa de vida, nível de educação e renda nacional bruta per capita não influenciam positiva e negativamente para o desenvolvimento e complicações clínicas do linfoma de Hodgkin.
 
-```{r fig.cap = "Figura 3: Taxa de mortalidade por Linfoma de Hodgkin em crianças e adolescentes no Brasil, por faixa etária e região.", results = "hide"}
-# region <- read_region(year = 2020)
+```{r fig.cap = "Figura 3: Taxa de mortalidade por Linfoma de Hodgkin em crianças e adolescentes no Brasil, por faixa etária e região."}
+region <- read_region(year = 2020)
 
 t5 <- d %>% 
   mutate(name_region = case_when(
@@ -189,9 +162,9 @@ t2 <- t5 %>% filter(base=="populacao" & name_region != "NA") %>% rename(n_pop = 
 
 dados2 <- full_join(t1,t2,by=c("regiao","faixa_et","name_region")) %>% mutate(taxa=n_total/n_pop*100000)
 
-dados_mapa2 <- left_join(region, dados2, by= "name_region")
+dados_mapa <- left_join(region, dados2, by= "name_region")
 
-dados_mapa2 %>%
+dados_mapa %>%
   ggplot() +
   geom_sf(aes(fill=taxa), color= "grey30", size=.15) +
   theme_void()  + 
@@ -200,53 +173,5 @@ dados_mapa2 %>%
        fill = "taxa") +
   scale_fill_viridis_c(option="rocket",direction=-1) + 
   facet_wrap(~faixa_et)
-```
-
-```{r}
-dados2 %>%
-  select(regiao,faixa_et,n_total,taxa) %>% 
-  as.data.table() 
-```
-
-<br> 
-
-### Análise PIB por região (2002 a 2019)
-
-```{r,echo=FALSE,results = "hide"}
-dados_pib <- read.csv("dados/PIB/municipio.csv")
-
-municipios <- read_municipality(year=2020)
-
-municipios <- data.frame(municipios) |> select (code_muni,name_region)
-
-dados_pib <- full_join(dados_pib,municipios,by=c("id_municipio" ="code_muni"))
-
-data_pib <- dados_pib |> 
-  group_by(name_region,ano) %>% 
-  summarise(pib_total = sum(pib)) %>% 
-  as.data.frame()
-
-#filtro 2002 a 2019
-
-dados_mapa6 <- dados_mapa |> filter(ano >= 2002 & ano <= 2019)
-
-dados_mapa6$ano <- as.numeric(dados_mapa6$ano)
-
-dados_mapa3 <- full_join(data_pib,dados_mapa6,by=c("name_region","ano"))
-
-dados_mapa3 <- dados_mapa3 |> mutate(taxa_pib=pib_total/n_pop)
-
-dados_mapa3 <- left_join(region, dados_mapa3, by= "name_region")
-
-dados_mapa3 %>%
-  ggplot() +
-  geom_sf(aes(fill=taxa_pib), color= "grey30", size=.15) +
-  theme_void()  + 
-  labs(title = "Pib por região e ano",
-       subtitle = "",
-       fill = "taxa") +
-  scale_fill_viridis_c(option="rocket",direction=-1) + 
-  facet_wrap(~ano)
-
 ```
 
