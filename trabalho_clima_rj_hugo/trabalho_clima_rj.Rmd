@@ -1,0 +1,101 @@
+---
+title: "Trabalho - Clima RJ"
+author: "Hugo Batista"
+date: '05/12/2022'
+output: html_document
+---
+
+Os dados foram filtrados para o estado do RJ para fazer a análise das variáveis
+
+Carregando pacotes
+```{r, warning=FALSE}
+require(data.table)
+require(arrow)
+require(corrplot)
+require(tseries)
+require(TTR)
+```
+
+Abrindo o banco de dados já filtrado e tratando as variáveis:
+```{r}
+dataset <- read_parquet("dados_rj.parquet")
+dataset[, index := NULL]
+names(dataset) <- c("date", "hr", "prcp", "stp", "smax", "smin", "gbrd", 
+                    "temp", "dewp", "tmax", "tmin", "dmax", "dmin", "hmax", 
+                    "hmin", "hmdy", "wdct", "gust", "wdsp", "region", "prov", 
+                    "wsnm", "inme", "lat", "lon", "elvt")
+```
+
+Analisando a correlação de Pearson entre as variáveis numéricas:
+```{r}
+dataset_cor <- dataset[, c("date","prcp", "stp", "smax", "smin", "gbrd", 
+                       "temp", "dewp", "tmax", "tmin", "dmax", "dmin", "hmax", 
+                       "hmin", "hmdy", "wdct", "gust", "wdsp")]
+is.na(dataset_cor) <- dataset_cor == -9999.0
+dataset_corg <- na.omit(dataset_cor)
+corrplot(cor(dataset_corg[, date := NULL]), method = "circle")
+rm(dataset_corg)
+
+```
+Percebemos que as variáveis de pressão tem alta correlação entre si, assim como as variáveis de temperatura. Assim podemos selecionar apenas uma de cada tipo para análise.
+
+Para as variáveis seguintes serão plotados os gráficos e teste de normalidade.
+
+Temperatura máxima:
+```{r}
+dataset_cor1 <- na.omit(dataset_cor)
+
+tmax <- TTR::runMean(dataset_cor1$tmax[], n=9)
+par(mfrow=c(2,1))
+plot.ts(tmax, main = "Temperatura máxima no tempo")
+hist(tmax, main = "Temperatura máxima no tempo")
+jarque.bera.test(na.omit(tmax))
+rm(tmax)
+```
+Vemos que a temperatura máxima não segue uma distribuição normal pelo teste Jarque Bera. 
+
+Precipitação total:
+```{r}
+dataset_cor1 <- na.omit(dataset_cor)
+
+prcp <- TTR::runMean(dataset_cor1$prcp[], n=9)
+par(mfrow=c(2,1))
+plot.ts(prcp, main = "Precipitação total (mm)")
+hist(prcp, main = "Precipitação total (mm)")
+jarque.bera.test(na.omit(prcp))
+rm(prcp)
+```
+Vemos que a precipitação total não segue uma distribuição normal pelo teste Jarque Bera além de percebermos vários pontos de outliers, porém a maioria dos valores estão entre 0 e 1. 
+
+Pressao atmosférica ao nivel da estação:
+```{r}
+dataset_cor1 <- na.omit(dataset_cor)
+
+stp <- TTR::runMean(dataset_cor1$stp[], n=9)
+par(mfrow=c(2,1))
+plot.ts(stp, main = "Pressao atmosférica ao nivel da estação")
+hist(stp, main = "Pressao atmosférica ao nivel da estação")
+jarque.bera.test(na.omit(stp))
+rm(stp)
+```
+Pressão também não segue uma distribuição normal e percebemos um comportamento padrão nos níveis mais baixos pelo gráfico. 
+
+Vento rajada máxima:
+```{r}
+dataset_cor1 <- na.omit(dataset_cor)
+
+gust <- TTR::runMean(dataset_cor1$gust[], n=9)
+par(mfrow=c(2,1))
+plot.ts(gust, main = "Vento rajada máxima")
+hist(gust, main = "Vento rajada máxima")
+jarque.bera.test(na.omit(gust))
+rm(gust)
+```
+Percebemos sazonalidade na rajada de vento máxima.
+
+Fazendo um modelo com variável resposta temperatura máxima e com as covariáveis que foram destritidas acima:
+```{r}
+fit1 <- lm(formula = tmax ~ prcp + stp + gust, data = dataset_cor1)
+summary(fit1)
+```
+Percebemos que todas covariáveis deramsignificativas para temperatura máxima porém com intercepto muito baixo. Teríamos que avaliar outros meios de modelar pelo tempo.
