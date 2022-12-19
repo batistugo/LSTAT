@@ -11,14 +11,11 @@ Categoria de cid: Cid 91-95
 ```python
 import pandas as pd, numpy as np
 import matplotlib.pyplot as plt, seaborn as sns
-
+import warnings
 sns.set()
 plt.rcParams['figure.figsize'] = [17, 6]
+warnings.filterwarnings('ignore')
 ```
-
-    /home/joaoholz/miniconda3/envs/lestat/lib/python3.8/site-packages/scipy/__init__.py:146: UserWarning: A NumPy version >=1.16.5 and <1.23.0 is required for this version of SciPy (detected version 1.23.3
-      warnings.warn(f"A NumPy version >={np_minversion} and <{np_maxversion}"
-
 
 ## Juntando os dados
 
@@ -58,19 +55,8 @@ df['SUL'] = pd.to_numeric(df['SUL'])
 df['METROPOLITANA']=pd.to_numeric(df['METROPOLITANA'])
 df['CENTRAL NORTE']=pd.to_numeric(df['CENTRAL NORTE'])
 df['Total']=pd.to_numeric(df['Total'])
+
 ```
-
-    /tmp/ipykernel_27801/4000311993.py:1: FutureWarning: In a future version of pandas all arguments of read_csv except for the argument 'filepath_or_buffer' will be keyword-only.
-      dfmenor1 = pd.read_csv('data/menor1ano.csv',';')
-    /tmp/ipykernel_27801/4000311993.py:2: FutureWarning: In a future version of pandas all arguments of read_csv except for the argument 'filepath_or_buffer' will be keyword-only.
-      df1a4 = pd.read_csv('data/1a4anos.csv',';')
-    /tmp/ipykernel_27801/4000311993.py:3: FutureWarning: In a future version of pandas all arguments of read_csv except for the argument 'filepath_or_buffer' will be keyword-only.
-      df5a9 = pd.read_csv('data/5a9.csv',';')
-    /tmp/ipykernel_27801/4000311993.py:4: FutureWarning: In a future version of pandas all arguments of read_csv except for the argument 'filepath_or_buffer' will be keyword-only.
-      df10a15 = pd.read_csv('data/10a15.csv',';')
-    /tmp/ipykernel_27801/4000311993.py:19: FutureWarning: In a future version of pandas all arguments of read_csv except for the argument 'filepath_or_buffer' will be keyword-only.
-      pop = pd.read_csv('data/popu.csv',';')
-
 
 ## Group By
 Fazendo um simples group by vemos abaixo a tabela cruzada de faixa etaria x macrorregião.
@@ -204,6 +190,8 @@ As series historicas dos Cids parecem estar estacionarias, onde nas idades mais 
 
 
 ```python
+from get_pop import get_pop_by_faixa
+
 def plot_lines(df,
                xcol = 'index',
                title = "População do espirito santo",
@@ -223,6 +211,63 @@ def plot_lines(df,
     plt.show()
 ```
 
+
+```python
+title = 'Casos de Neoplasia'
+title = 'Taxa de ' + title
+from get_pop import get_pop_by_faixa
+def plot_lines_to_0a5():
+    aaa = pd.read_csv('data/unificadomenor5.csv')
+    aaa['ano'] = aaa.iloc[:,0]
+    teste = aaa
+    teste = teste.replace(np.NaN,0)
+    ano = pd.DataFrame(np.arange(2000,2020))
+    ano.columns = ['ano']
+    denominador = pop.iloc[3:,:].iloc[:,1:4].apply(lambda x: x*get_pop_by_faixa()['0a4']).dropna()
+    taxa = pd.concat([(teste.iloc[:,1:4]/denominador).iloc[:-1,:],ano],axis=1)*1000
+    plot_lines(taxa,xcol = 'ano',title= title + ' - 0 a 4 Anos')
+    
+def plot_lines_to_5a9():
+    df_plot = df5a9.drop('faixa',axis=1)
+    df_plot.index = df_plot['Ano do Óbito']
+    df_plot = df_plot.drop('Ano do Óbito',axis=1)
+    df_plot = df_plot.iloc[:-1,:]
+    df_plot = df_plot.apply(pd.to_numeric)
+    df_plot = df_plot.reset_index()
+    df_plot = df_plot.apply(pd.to_numeric)
+    df_plot2 = pd.DataFrame(np.arange(2000,2020))
+    df_plot2.columns = ['ano']
+    df_plot2 = df_plot2.apply(pd.to_numeric)
+    teste = df_plot.merge(df_plot2,how='right',right_on='ano',left_on='Ano do Óbito')
+    teste = teste.replace(np.NaN,0)
+    ano = pd.DataFrame(np.arange(2000,2020))
+    ano.columns = ['ano']
+    denominador = pop.iloc[3:,:].iloc[:,1:4].apply(lambda x: x*get_pop_by_faixa()['5a9']).dropna()
+    taxa = pd.concat([(teste.iloc[:,1:4]/denominador).iloc[:-1,:],ano],axis=1)*1000
+    #taxa = pd.concat([(teste.iloc[:,1:4]/pop.iloc[:,1:4]).iloc[:-1,:],ano],axis=1)
+    plot_lines(taxa,xcol = 'ano',title= title + ' - 5 a 9 Anos')
+    
+def plot_lines_to_10a15():
+    df_plot = df10a15.drop('faixa',axis=1)
+    df_plot.index = df_plot['Ano do Óbito']
+    df_plot = df_plot.drop('Ano do Óbito',axis=1)
+    df_plot = df_plot.iloc[:-1,:]
+    df_plot = df_plot.apply(pd.to_numeric)
+    df_plot = df_plot.reset_index()
+    df_plot = df_plot.apply(pd.to_numeric)
+    df_plot2 = pd.DataFrame(np.arange(2000,2020))
+    df_plot2.columns = ['ano']
+    df_plot2 = df_plot2.apply(pd.to_numeric)
+    teste = df_plot.merge(df_plot2,how='right',right_on='ano',left_on='Ano do Óbito')
+    teste = teste.replace(np.NaN,0)
+    ano = pd.DataFrame(np.arange(2000,2020))
+    ano.columns = ['ano']
+    denominador = pop.iloc[3:,:].iloc[:,1:4].apply(lambda x: x*get_pop_by_faixa()['5a9']).dropna()
+    taxa = pd.concat([(teste.iloc[:,1:4]/denominador).iloc[:-1,:],ano],axis=1)*1000
+    #taxa = pd.concat([(teste.iloc[:,1:4]/pop.iloc[:,1:4]).iloc[:-1,:],ano],axis=1)
+    plot_lines(taxa,xcol = 'ano',title= title + ' - 10 a 14 Anos')
+```
+
 ## Serie historica do crescimento populacional do Espirito Santo
 
 
@@ -232,34 +277,13 @@ plot_lines(pop,xcol='index')
 
 
     
-![png](images/output_17_0.png)
+![png](images/output_18_0.png)
     
 
 
 
 ```python
-title = 'Casos de Neoplasia'
-title = 'Taxa de ' + title
-```
-
-
-```python
-df_plot = dfmenor1.drop('faixa',axis=1)
-df_plot.index = df_plot['Ano do Óbito']
-df_plot = df_plot.drop('Ano do Óbito',axis=1)
-df_plot = df_plot.iloc[:-1,:]
-df_plot = df_plot.apply(pd.to_numeric)
-df_plot = df_plot.reset_index()
-df_plot = df_plot.apply(pd.to_numeric)
-df_plot2 = pd.DataFrame(np.arange(1996,2020))
-df_plot2.columns = ['ano']
-df_plot2 = df_plot2.apply(pd.to_numeric)
-teste = df_plot.merge(df_plot2,how='right',right_on='ano',left_on='Ano do Óbito')
-teste = teste.replace(np.NaN,0)
-ano = pd.DataFrame(np.arange(1996,2020))
-ano.columns = ['ano']
-taxa = pd.concat([(teste.iloc[:,1:4]/pop.iloc[:,1:4]).iloc[:-1,:],ano],axis=1)
-plot_lines(taxa,xcol = 'ano',title= title + ' - Menor que 1 Ano')
+plot_lines_to_0a5()
 ```
 
 
@@ -270,22 +294,7 @@ plot_lines(taxa,xcol = 'ano',title= title + ' - Menor que 1 Ano')
 
 
 ```python
-df_plot = df1a4.drop('faixa',axis=1)
-df_plot.index = df_plot['Ano do Óbito']
-df_plot = df_plot.drop('Ano do Óbito',axis=1)
-df_plot = df_plot.iloc[:-1,:]
-df_plot = df_plot.apply(pd.to_numeric)
-df_plot = df_plot.reset_index()
-df_plot = df_plot.apply(pd.to_numeric)
-df_plot2 = pd.DataFrame(np.arange(1996,2020))
-df_plot2.columns = ['ano']
-df_plot2 = df_plot2.apply(pd.to_numeric)
-teste = df_plot.merge(df_plot2,how='right',right_on='ano',left_on='Ano do Óbito')
-teste = teste.replace(np.NaN,0)
-ano = pd.DataFrame(np.arange(1996,2020))
-ano.columns = ['ano']
-taxa = pd.concat([(teste.iloc[:,1:4]/pop.iloc[:,1:4]).iloc[:-1,:],ano],axis=1)
-plot_lines(taxa,xcol = 'ano',title= title + ' - 1 a 4 Anos')
+plot_lines_to_0a5()
 ```
 
 
@@ -296,53 +305,12 @@ plot_lines(taxa,xcol = 'ano',title= title + ' - 1 a 4 Anos')
 
 
 ```python
-df_plot = df5a9.drop('faixa',axis=1)
-df_plot.index = df_plot['Ano do Óbito']
-df_plot = df_plot.drop('Ano do Óbito',axis=1)
-df_plot = df_plot.iloc[:-1,:]
-df_plot = df_plot.apply(pd.to_numeric)
-df_plot = df_plot.reset_index()
-df_plot = df_plot.apply(pd.to_numeric)
-df_plot2 = pd.DataFrame(np.arange(1996,2020))
-df_plot2.columns = ['ano']
-df_plot2 = df_plot2.apply(pd.to_numeric)
-teste = df_plot.merge(df_plot2,how='right',right_on='ano',left_on='Ano do Óbito')
-teste = teste.replace(np.NaN,0)
-ano = pd.DataFrame(np.arange(1996,2020))
-ano.columns = ['ano']
-taxa = pd.concat([(teste.iloc[:,1:4]/pop.iloc[:,1:4]).iloc[:-1,:],ano],axis=1)
-plot_lines(taxa,xcol = 'ano',title= title + ' - 5 a 9 Anos')
+plot_lines_to_10a15()
 ```
 
 
     
 ![png](images/output_21_0.png)
-    
-
-
-
-```python
-df_plot = df10a15.drop('faixa',axis=1)
-df_plot.index = df_plot['Ano do Óbito']
-df_plot = df_plot.drop('Ano do Óbito',axis=1)
-df_plot = df_plot.iloc[:-1,:]
-df_plot = df_plot.apply(pd.to_numeric)
-df_plot = df_plot.reset_index()
-df_plot = df_plot.apply(pd.to_numeric)
-df_plot2 = pd.DataFrame(np.arange(1996,2020))
-df_plot2.columns = ['ano']
-df_plot2 = df_plot2.apply(pd.to_numeric)
-teste = df_plot.merge(df_plot2,how='right',right_on='ano',left_on='Ano do Óbito')
-teste = teste.replace(np.NaN,0)
-ano = pd.DataFrame(np.arange(1996,2020))
-ano.columns = ['ano']
-taxa = pd.concat([(teste.iloc[:,1:4]/pop.iloc[:,1:4]).iloc[:-1,:],ano],axis=1)
-plot_lines(taxa,xcol = 'ano',title= title + ' - 10 a 14 Anos')
-```
-
-
-    
-![png](images/output_22_0.png)
     
 
 
@@ -355,7 +323,7 @@ _ = plt.title('Evolução de Óbitos por faixa étaria - ' + title, loc='left', 
 
 
     
-![png](images/output_23_0.png)
+![png](images/output_22_0.png)
     
 
 
@@ -368,52 +336,60 @@ import geopandas as gpd
 
 
 ```python
-x = gpd.read_file('Lim_Macrorregiao.shp')
+x = gpd.read_file('shapefiles/Lim_Macrorregiao.shp')
 x = x[x.nome!='Norte']
 ```
 
 
 ```python
 TOTAL = df.groupby(by='Ano do Óbito').sum()
+percen_pop = get_pop_by_faixa()
+percen_pop['sumpercen'] = percen_pop['0a4'] + percen_pop['5a9'] + percen_pop['10a14']
 ```
 
 
 ```python
-fig, axes = plt.subplots(2,3)
+def plot_evolucao_mapa():
+    fig, axes = plt.subplots(2,3)
 
-fig.suptitle('Evolução da taxa de Neoplasia',fontsize=20)
+    fig.suptitle('Evolução da taxa de Neoplasia',fontsize=20)
 
-vmax = 7/732490
-# [norte,sul,metropolitana]
-x['value'] = [7/732490,1/545491, 7/1660081]
-_ = x.plot(x['value'],cmap="crest",legend=True,ax=axes[0][0],vmax=vmax)
-_ = axes[0][0].title.set_text('1999')
-_ = axes[0,0].axis('off')
+    vmax = 7/(732490*0.300418)
+    # [norte,sul,metropolitana]
+    x['value'] = list(map(lambda x: x*(1/0.300418),[7/732490,1/545491, 7/1660081]))
+    _ = x.plot(x['value'],cmap="crest",legend=True,ax=axes[0][0],vmax=vmax)
+    _ = axes[0][0].title.set_text('1999')
+    _ = axes[0,0].axis('off')
 
-x['value'] = [4/773930,2/609420,6/1866869]
-_ = x.plot(x['value'],cmap="crest",legend=True,ax=axes[0][1],vmax=vmax)
-_ = axes[0][1].title.set_text('2003')
-_ = axes[0,1].axis('off')
+    x['value'] = [4/(773930*0.286621),2/(609420*0.286621),6/(1866869*0.286621)]
+    _ = x.plot(x['value'],cmap="crest",legend=True,ax=axes[0][1],vmax=vmax)
+    _ = axes[0][1].title.set_text('2003')
+    _ = axes[0,1].axis('off')
 
-x['value'] = [4/786492,2/607461,6/1957716]
-_ = x.plot(x['value'],cmap="crest",legend=True,ax=axes[0][2],vmax=vmax)
-_ = axes[0][2].title.set_text('2007')
-_ = axes[0,2].axis('off')
+    x['value'] = list(map(lambda x: x*(1/0.268982),[4/786492,2/607461,6/1957716]))
+    _ = x.plot(x['value'],cmap="crest",legend=True,ax=axes[0][2],vmax=vmax)
+    _ = axes[0][2].title.set_text('2007')
+    _ = axes[0,2].axis('off')
 
-x['value'] = [4/854539,2/626503,6/2066013]
-_ = x.plot(x['value'],cmap="crest",legend=True,ax=axes[1][0],vmax=vmax)
-_ = axes[1][0].title.set_text('2011')
-_ = axes[1,0].axis('off')
+    x['value'] = list(map(lambda x: x*(1/0.250804),[4/854539,2/626503,6/2066013]))
+    _ = x.plot(x['value'],cmap="crest",legend=True,ax=axes[1][0],vmax=vmax)
+    _ = axes[1][0].title.set_text('2011')
+    _ = axes[1,0].axis('off')
 
-x['value'] = [4/943971,2/680871,6/2305069]
-_ = x.plot(x['value'],cmap="crest",legend=True,ax=axes[1][1],vmax=vmax)
-_ = axes[1][1].title.set_text('2015')
-_ = axes[1,1].axis('off')
+    x['value'] = list(map(lambda x: x*(1/0.231885),[4/943971,2/680871,6/2305069]))
+    _ = x.plot(x['value'],cmap="crest",legend=True,ax=axes[1][1],vmax=vmax)
+    _ = axes[1][1].title.set_text('2015')
+    _ = axes[1,1].axis('off')
 
-x['value'] = [4/961446,2/678071,6/2379133]
-_ = x.plot(x['value'],cmap="crest",legend=True,ax=axes[1][2],vmax=vmax)
-_ = axes[1][2].title.set_text('2019')
-_ = axes[1,2].axis('off')
+    x['value'] = list(map(lambda x: x*(1/0.213184),[4/961446,2/678071,6/2379133]))
+    _ = x.plot(x['value'],cmap="crest",legend=True,ax=axes[1][2],vmax=vmax)
+    _ = axes[1][2].title.set_text('2019')
+    _ = axes[1,2].axis('off')
+```
+
+
+```python
+plot_evolucao_mapa()
 ```
 
 
